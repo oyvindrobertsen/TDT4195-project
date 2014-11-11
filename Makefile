@@ -1,7 +1,9 @@
-.PHONY: serve devsetup
+.PHONY: serve setup
 
-devsetup:
+setup:
+	npm install
 	bower install
+	grunt
 
 serve:
 	python -m SimpleHTTPServer
