@@ -1,50 +1,5 @@
-###
-function MainScene(data) {
-this.data = data;
-
-this.scene = new THREE.Scene();
-
-this.camera = new THREE.PerspectiveCamera(
-75,
-window.innerWidth/window.innerHeight,
-0.1,
-10000
-  )
-  this.camera.position.z = 100;
-  this.camera.position.x = 100;
-
-  this.geometry = new THREE.PlaneGeometry(100, 100);
-  this.material = new THREE.MeshBasicMaterial({color: 0xff0000, side: THREE.DoubleSide});
-
-  this.mesh = new THREE.Mesh(this.geometry, this.material);
-  this.mesh.position = new THREE.Vector3(-10, 100, 10);
-  this.scene.add(this.mesh);
-
-  this.renderer = new THREE.WebGLRenderer({alpha: true});
-  this.renderer.setSize(window.innerWidth, window.innerHeight);
-  this.renderer.setClearColor(0xffffff, 1);
-
-  document.body.appendChild(this.renderer.domElement);
-}
-
-MainScene.prototype.render = function() {
-requestAnimationFrame(this.render.bind(this));
-
-//this.mesh.rotation.x += 0.01;
-//this.mesh.rotation.y += 0.02;
-
-this.renderer.render(this.scene, this.camera);
-};
-
-// Do IP part here before the scene is constructed.
-// Call MainScene constructor with list of objects from IP part.
-
-var scene = new MainScene([]);
-scene.render();
-###
-
 class MainScene
-  constructor: (@data) ->
+  constructor: (@object_data, @width, @height) ->
     @scene = new THREE.Scene()
 
     @camera = new THREE.PerspectiveCamera(
@@ -53,14 +8,16 @@ class MainScene
       0.1,
       10000
     )
-    @camera.position.z = 1000
-    
-    @geometry = new THREE.BoxGeometry(200, 200, 200)
-    @material = new THREE.MeshBasicMaterial(color: 0xff0000, wireframe: true)
-    @mesh = new THREE.Mesh(@geometry, @material)
-    @scene.add(@mesh)
+    @camera.position.z = 0
+    @camera.position.y = 1000
+    @camera.position.x = 0
+    @camera.lookAt(new THREE.Vector3(0, 0, 0))
 
-    @renderer = new THREE.WebGLRenderer(alpha: true)
+    @plane = @addPlane()
+
+    @objects = @addObjects()
+
+    @renderer = new THREE.WebGLRenderer({alpha: true})
     @renderer.setSize(window.innerWidth, window.innerHeight)
     @renderer.setClearColor(0xffffff, 1)
 
@@ -68,12 +25,41 @@ class MainScene
 
   render: =>
     requestAnimationFrame(@render)
-    
-    @mesh.rotation.z += 0.01
-    @mesh.rotation.y += 0.02
 
     @renderer.render(@scene, @camera)
     return
 
-scene = new MainScene([])
+  addPlane: ->
+    planeGeometry = new THREE.PlaneGeometry(@width, @height, 100)
+    planeMaterial = new THREE.MeshBasicMaterial({color: 0x000000, wireframe: true})
+    planeMesh = new THREE.Mesh(planeGeometry, planeMaterial)
+    planeMesh.rotateOnAxis(new THREE.Vector3(1, 0, 0), 1.57)
+    planeMesh.position.z += 500
+    planeMesh.position.x += 500
+    @scene.add(planeMesh)
+    return planeMesh
+
+  addObjects: ->
+    objList = []
+    for object in @object_data
+      objGeometry = new THREE.RingGeometry(20, 100, 100)
+      objMaterial = new THREE.MeshBasicMaterial({color: 0xff0000, side: THREE.DoubleSide, wireframe: true})
+      objMesh = new THREE.Mesh(objGeometry, objMaterial)
+      objMesh.position.z = 1000 - object.center.x
+      objMesh.position.x = object.center.y
+      objMesh.position.y = 1
+      objMesh.rotateOnAxis(new THREE.Vector3(1, 0, 0), 1.57)
+      objList.push(objMesh)
+      @scene.add(objMesh)
+    return objList
+
+
+stuff = [
+  {type: 'coin', center: {x: 200, y: 200}},
+  {type: 'coin', center: {x: 400, y: 400}}
+]
+
+width = height = 1000
+
+scene = new MainScene(stuff, width, height)
 scene.render()
